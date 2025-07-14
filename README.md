@@ -8,6 +8,7 @@ A stunning, modern mental health platform focused on gamified wellness challenge
 - CREATE ROOM - create your own room and add your friends in it .
 - WELLNESS DAILY CHALLENGES to maintain a regular healthy practice and to unlock Achievements
 - PROGRESS REPORT which shows your stats including streak,completion rate,total acheivements,daily logs & progress and XP earned.
+- XP based levelling and tracking system.
 
 ### Prerequisites
 
