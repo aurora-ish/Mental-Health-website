@@ -40,9 +40,7 @@ npm start
 - NextJs
 - MongoDB
 
-### 📄 License
 
-This project is created for the Zuuush mental health platform. All rights reserved.
 
 ### Maintainers
 
