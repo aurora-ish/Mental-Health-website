@@ -9,12 +9,6 @@ A stunning, modern mental health platform focused on gamified wellness challenge
 - WELLNESS DAILY CHALLENGES to maintain a regular healthy practice and to unlock Achievements
 - PROGRESS REPORT which shows your stats including streak,completion rate,total acheivements,daily logs & progress and XP earned.
 
-
-### Prerequisites
-
-- Modern web browser (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
-- Local web server (optional, for development)
-
 ### Installation
 
 1. Modern web browser (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
@@ -23,7 +17,7 @@ A stunning, modern mental health platform focused on gamified wellness challenge
 
 In the project directory, you can run:
 
-## Getting Started(LINUX/MACOS)
+## Getting Started
 
 ```bash
 git clone git@github.com:Somay-kousis/Mental-Health-website.git
@@ -37,10 +31,8 @@ npm start
 
 - HTML,CSS,JS
 - React
-- NextJs
+- NodeJs
 - MongoDB
-
-
 
 ### Maintainers
 
