@@ -86,6 +86,7 @@ const Home: React.FC = () => (
                     <input type="password" name="password" id="loginPassword" placeholder="Password" className="form-input" required />
                   </div>
                   <Link to="/dashboard" className="btn">Sign In</Link>
+                  <Link to="/signup" className="btn btn-secondary" style={{ marginTop: '10px' }}>Sign Up</Link>
                 </form>
               </div>
             </div>

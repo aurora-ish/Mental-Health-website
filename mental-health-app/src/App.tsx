@@ -22,6 +22,7 @@ import './css/search-room.css';
 import './css/components.css';
 import './css/animations.css';
 import './App.css';
+import Signup from './components/Signup';
 
 function App() {
   return (
@@ -67,6 +68,11 @@ function App() {
           <Route path="/create-room" element={
             <PageTransition>
               <CreateRoom />
+            </PageTransition>
+          } />
+          <Route path="/signup" element={
+            <PageTransition>
+              <Signup />
             </PageTransition>
           } />
           {/* Additional routes for full functionality */}
