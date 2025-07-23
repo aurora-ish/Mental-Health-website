@@ -32,6 +32,19 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
     },
+     level: {
+    type: Number,
+    default: 1
+  },
+  lastLoginDate: {
+  type: Date,
+  default: 1
+},
+dailyStreak: {
+  type: Number,
+  default: 0
+}
+
 
 });
 

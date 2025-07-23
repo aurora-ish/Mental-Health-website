@@ -65,6 +65,25 @@ router.post('/signin', async (req, res) => {
     if (!isPasswordValid)
       return res.status(401).json({ error: 'Invalid email or password' });
 
+    // ✅ DAILY LOGIN TRACKING LOGIC
+    const today = new Date().toISOString().split('T')[0]; // e.g., "2025-07-19"
+    const lastLogin = user.lastLoginDate ? user.lastLoginDate.toISOString().split('T')[0] : null;
+
+    if (lastLogin !== today) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const isYesterday = lastLogin === yesterday.toISOString().split('T')[0];
+
+      if (isYesterday) {
+        user.dailyStreak += 1;
+      } else {
+        user.dailyStreak = 1; // reset streak
+      }
+
+      user.lastLoginDate = new Date();
+      await user.save();
+    }
+
     const token = generateToken(user._id);
 
     res.json({
@@ -75,6 +94,8 @@ router.post('/signin', async (req, res) => {
         username: user.username,
         email: user.email,
         createdAt: user.createdAt,
+        dailyStreak: user.dailyStreak,        
+        lastLoginDate: user.lastLoginDate,   
       },
     });
   } catch (error) {
@@ -82,6 +103,7 @@ router.post('/signin', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // LOGOUT (Client-side token removal)
 router.post('/logout', (req, res) => {

@@ -11,20 +11,23 @@ const Dashboard: React.FC = () => {
   const [dailyLog, setDailyLog] = useState('');
   const [logEntries, setLogEntries] = useState<Array<{date: string, content: string}>>([]);
   const [xp, setXP] = useState<number | null>(null);
+  const [level, setLevel] = useState(0);
+  const [streak, setStreak] = useState<number | null>(null);
+  const [message, setMessage] = useState<string>('');
+  interface MoodEntry {
+  mood: number;
+  date: string;
+  timeOfDay: 'morning' | 'night';
+}
+
+const [moodJourney, setMoodJourney] = useState<MoodEntry[]>([]);
 
 
-  useEffect(() => {
-    // Initialize mood chart
-    if (chartRef.current) {
-      const ctx = chartRef.current.getContext('2d');
-      if (ctx) {
-        // Destroy existing chart if it exists
-        if (chartInstance.current) {
-          chartInstance.current.destroy();
-        }
-          const fetchXP = async () => {
+
+useEffect(() => {
+  const fetchXPAndLevel = async () => {
     try {
-      const token = localStorage.getItem('token'); // Adjust if you're using context
+      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5000/api/xp', {
         method: 'GET',
         headers: {
@@ -33,90 +36,126 @@ const Dashboard: React.FC = () => {
         },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch XP');
-
+      if (!response.ok) throw new Error('Failed to fetch XP and Level');
       const data = await response.json();
       setXP(data.xp);
+      setLevel(data.level);
+      setStreak(data.dailyStreak);
     } catch (err) {
-      console.error('Error fetching XP:', err);
+      console.error('Error fetching XP and Level:', err);
     }
   };
 
-  fetchXP();
-  
-  // ...existing mood chart setup below
+  const fetchMoodJourney = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/mood/journey', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      console.log('Mood Journey Data:', data);
+      setMoodJourney(data); // set state here, chart will draw in next effect
+    } catch (error) {
+      console.error('Error fetching mood journey:', error);
+    }
+  };
 
-        // Sample mood data for the last 7 days
-        const moodData = [7, 6, 8, 5, 9, 7, 8];
-        const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  fetchXPAndLevel();
+  fetchMoodJourney();
+}, []);
+useEffect(() => {
+  if (!chartRef.current || moodJourney.length === 0) return;
 
-        chartInstance.current = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: 'Mood Score',
-              data: moodData,
-              borderColor: 'rgba(99, 102, 241, 1)',
-              backgroundColor: 'rgba(99, 102, 241, 0.1)',
-              borderWidth: 3,
-              fill: true,
-              tension: 0.4,
-              pointBackgroundColor: 'rgba(99, 102, 241, 1)',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 6,
-              pointHoverRadius: 8
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: false
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 10,
-                ticks: {
-                  stepSize: 2,
-                  color: '#6B7280'
-                },
-                grid: {
-                  color: 'rgba(107, 114, 128, 0.1)'
-                }
-              },
-              x: {
-                ticks: {
-                  color: '#6B7280'
-                },
-                grid: {
-                  color: 'rgba(107, 114, 128, 0.1)'
-                }
-              }
-            }
-          }
-        });
+  const ctx = chartRef.current.getContext('2d');
+  if (!ctx) return;
+
+  if (chartInstance.current) {
+    chartInstance.current.destroy();
+  }
+
+  const sortedJourney = moodJourney
+    .slice()
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const labels = sortedJourney.map(entry =>
+    new Date(entry.date).toLocaleDateString('en-IN', {
+      month: 'short',
+      day: 'numeric',
+    })
+  );
+
+  const moodData = sortedJourney.map(entry => entry.mood);
+
+  chartInstance.current = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Mood Score',
+        data: moodData,
+        borderColor: 'rgba(99, 102, 241, 1)',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 10,
+          ticks: { stepSize: 2, color: '#6B7280' },
+          grid: { color: 'rgba(107, 114, 128, 0.1)' }
+        },
+        x: {
+          ticks: { color: '#6B7280' },
+          grid: { color: 'rgba(107, 114, 128, 0.1)' }
+        }
       }
     }
+  });
 
-    // Load sample log entries
-    setLogEntries([
-      { date: '2024-01-15', content: 'Had a great day today! Completed my morning meditation and felt very productive.' },
-      { date: '2024-01-14', content: 'Feeling a bit stressed about work, but managed to stay positive.' },
-      { date: '2024-01-13', content: 'Spent time with family, which always lifts my mood.' }
-    ]);
+  return () => {
+    if (chartInstance.current) {
+      chartInstance.current.destroy();
+    }
+  };
+}, [moodJourney]); // <-- Reruns only when moodJourney changes
 
-    // Cleanup function
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-    };
-  }, []);
+useEffect(() => {
+  fetchLogs();
+}, []);
+
+const fetchLogs = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('http://localhost:5000/api/log', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await res.json();
+    setLogEntries(data);
+  } catch (err) {
+    console.error('Error fetching logs:', err);
+  }
+};
+   
+
+
 
   const handleMoodSelect = (value: number) => {
     setSelectedMood(value);
@@ -126,28 +165,78 @@ const Dashboard: React.FC = () => {
     setSelectedTime(time);
   };
 
-  const handleSubmitMood = () => {
-    if (selectedMood !== null) {
-      alert(`Mood saved: ${selectedMood}/10 (${selectedTime})`);
-      setSelectedMood(null);
-    } else {
-      alert('Please select a mood first!');
-    }
-  };
+  const handleSubmitMood = async () => {
+  if (!selectedMood || !selectedTime) {
+    setMessage('Please select both mood and time.');
+    return;
+  }
 
-  const handleSaveLog = () => {
-    if (dailyLog.trim()) {
-      const newEntry = {
-        date: new Date().toISOString().split('T')[0],
-        content: dailyLog
-      };
-      setLogEntries([newEntry, ...logEntries]);
-      setDailyLog('');
-      alert('Daily log saved successfully!');
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setMessage('You are not logged in.');
+    return;
+  }
+
+  try {
+    const res = await fetch('http://localhost:5000/api/mood', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        mood: selectedMood,
+        timeOfDay: selectedTime,
+      }),
+    });
+
+    const data = await res.json();
+    console.log('Server response:', res.status, data); // 👈 SEE THIS IN DEVTOOLS
+
+    if (res.ok) {
+      setMessage(data.message || 'Mood saved!');
     } else {
-      alert('Please write something before saving!');
+      setMessage(data.error || 'Something went wrong.');
     }
-  };
+  } catch (error) {
+    console.error('Fetch failed:', error);
+    setMessage('Server error.');
+  }
+};
+
+
+
+const handleSaveLog = async () => {
+  if (dailyLog.trim()) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content: dailyLog }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || 'Something went wrong.');
+        return;
+      }
+
+      alert('Daily log saved successfully!');
+      setDailyLog('');
+      fetchLogs(); // Refresh logs after saving
+    } catch (err) {
+      console.error('Error saving log:', err);
+      alert('Server error.');
+    }
+  } else {
+    alert('Please write something before saving!');
+  }
+};
+
 
   const moodLabels = ['Terrible', 'Very Bad', 'Bad', 'Not Great', 'Okay', 'Good', 'Very Good', 'Great', 'Amazing', 'Perfect'];
 
@@ -222,7 +311,9 @@ const Dashboard: React.FC = () => {
               <div className="stat-card premium-card">
                 <div className="stat-icon">🔥</div>
                 <div className="stat-info">
-                  <span className="stat-value premium-number">7</span>
+                  <span className="stat-value premium-number">
+  {streak !== null ? streak : '...'}
+</span>
                   <span className="stat-label premium-text">Day Streak</span>
                 </div>
               </div>
@@ -238,51 +329,56 @@ const Dashboard: React.FC = () => {
               <div className="stat-card premium-card">
                 <div className="stat-icon">🏆</div>
                 <div className="stat-info">
-                  <span className="stat-value premium-number">12</span>
-                  <span className="stat-label premium-text">Achievements</span>
+                  <span className="stat-value premium-number">
+  {level !== null ? level : '...'}
+</span>
+<span className="stat-label premium-text">Level</span>
+
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        <section className="mood-section premium-section" id="mood-tracking">
-          <div className="section-header">
-            <h2 className="premium-section-title">Daily Mood Check</h2>
-            <p className="premium-section-subtitle">Rate your mood from 1-10</p>
-          </div>
-          <div className="mood-selector">
-            <div className="mood-dots">
-              {[...Array(10)].map((_, i) => (
-                <button 
-                  key={i}
-                  className={`mood-dot ${selectedMood === i + 1 ? 'selected' : ''}`}
-                  onClick={() => handleMoodSelect(i + 1)}
-                  title={moodLabels[i]}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-            <div className="mood-time-selector">
-              <button 
-                className={`time-btn ${selectedTime === 'morning' ? 'active' : ''}`}
-                onClick={() => handleTimeSelect('morning')}
-              >
-                🌅 Morning
-              </button>
-              <button 
-                className={`time-btn ${selectedTime === 'night' ? 'active' : ''}`}
-                onClick={() => handleTimeSelect('night')}
-              >
-                🌙 Night
-              </button>
-            </div>
-            <button className="submit-mood-btn btn-primary" onClick={handleSubmitMood}>
-              Save Mood
-            </button>
-          </div>
-        </section>
+<section className="mood-section premium-section" id="mood-tracking">
+  <div className="section-header">
+    <h2 className="premium-section-title">Daily Mood Check</h2>
+    <p className="premium-section-subtitle">Rate your mood from 1-10</p>
+  </div>
+  <div className="mood-selector">
+    <div className="mood-dots">
+      {[...Array(10)].map((_, i) => (
+        <button 
+          key={i}
+          className={`mood-dot ${selectedMood === i + 1 ? 'selected' : ''}`}
+          onClick={() => handleMoodSelect(i + 1)}
+          title={moodLabels[i]}
+        >
+          {i + 1}
+        </button>
+      ))}
+    </div>
+    <div className="mood-time-selector">
+      <button 
+        className={`time-btn ${selectedTime === 'morning' ? 'active' : ''}`}
+        onClick={() => handleTimeSelect('morning')}
+      >
+        🌅 Morning
+      </button>
+      <button 
+        className={`time-btn ${selectedTime === 'night' ? 'active' : ''}`}
+        onClick={() => handleTimeSelect('night')}
+      >
+        🌙 Night
+      </button>
+    </div>
+    <button className="submit-mood-btn btn-primary" onClick={handleSubmitMood}>
+      Save Mood
+    </button>
+    {message && <p className="feedback-text">{message}</p>}
+
+  </div>
+</section>
 
         <section className="graph-section premium-section">
           <div className="section-header">

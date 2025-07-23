@@ -6,6 +6,13 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 
+// in app.js or index.js
+const moodRoutes = require('./routes/mood');
+const logRoutes = require('./routes/log');
+
+
+
+
 
 
 
@@ -13,7 +20,8 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
-
+app.use('/api/mood', moodRoutes);
+app.use('/api/log', logRoutes);
 // Database connection
 connectDB(process.env.MONGODB_URI);
 
