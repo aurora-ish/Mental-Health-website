@@ -6,6 +6,13 @@ A stunning, modern mental health platform focused on gamified wellness challenge
 <img width="1918" height="882" alt="image" src="https://github.com/user-attachments/assets/537e042d-dd97-41db-8afd-8966eec11efd" />
 <img width="1919" height="878" alt="image" src="https://github.com/user-attachments/assets/4d9ea3ff-7f7a-482d-bdcf-49731808133f" />
 
+# Video demo
+
+
+Uploading ok2.mp4…
+
+
+
 ## Features Implemented
 
 ### Frontend  
